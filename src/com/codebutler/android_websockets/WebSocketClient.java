@@ -220,12 +220,14 @@ public class WebSocketClient {
 			public void run() {
                 try {
                     synchronized (mSendLock) {
-                        OutputStream outputStream = mSocket.getOutputStream();
-                        outputStream.write(frame);
-                        outputStream.flush();
-                        if(Build.VERSION.SDK_INT >= 14)
-                        	TrafficStats.incrementOperationCount(1);
-                    }
+	                	if(mSocket != null) {
+	                        OutputStream outputStream = mSocket.getOutputStream();
+	                        outputStream.write(frame);
+	                        outputStream.flush();
+	                        if(Build.VERSION.SDK_INT >= 14)
+	                        	TrafficStats.incrementOperationCount(1);
+	                    }
+                	}
                 } catch (IOException e) {
                     mListener.onError(e);
                 }
