@@ -21,10 +21,10 @@ android {
     }
     sourceSets {
         main {
-            java.srcDirs = ['main/java']
-            resources.srcDirs = ['main/java']
-            aidl.srcDirs = ['main/java']
-            renderscript.srcDirs = ['main/java']
+            java.srcDirs = ['src/main/java']
+            resources.srcDirs = ['src/main/java']
+            aidl.srcDirs = ['src/main/java']
+            renderscript.srcDirs = ['src/main/java']
             res.srcDirs = ['res']
             assets.srcDirs = ['assets']
         }
