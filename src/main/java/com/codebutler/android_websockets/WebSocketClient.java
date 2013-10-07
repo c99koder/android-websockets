@@ -131,6 +131,7 @@ public class WebSocketClient {
                     out.print("Origin: " + origin.toString() + "\r\n");
                     out.print("Sec-WebSocket-Key: " + secret + "\r\n");
                     out.print("Sec-WebSocket-Version: 13\r\n");
+                    out.print("Sec-WebSocket-Extensions: x-webkit-deflate-frame\r\n");
                     if (mExtraHeaders != null) {
                         for (NameValuePair pair : mExtraHeaders) {
                             out.print(String.format("%s: %s\r\n", pair.getName(), pair.getValue()));
@@ -164,6 +165,9 @@ public class WebSocketClient {
                             }
 
                             validated = true;
+                        } else if(header.getName().equalsIgnoreCase("Sec-WebSocket-Extensions")) {
+                            if(header.getValue().trim().equalsIgnoreCase("x-webkit-deflate-frame"))
+                                mParser.setDeflate(true);
                         }
                     }
 

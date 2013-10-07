@@ -39,6 +39,8 @@ import android.util.Log;
 import java.io.*;
 import java.util.Arrays;
 import java.util.List;
+import java.util.zip.DataFormatException;
+import java.util.zip.Inflater;
 
 @TargetApi(9)
 public class HybiParser {
@@ -47,11 +49,13 @@ public class HybiParser {
     private WebSocketClient mClient;
 
     private boolean mMasking = true;
+    private boolean mDeflate = false;
 
     private int     mStage;
 
     private boolean mFinal;
     private boolean mMasked;
+    private boolean mDeflated;
     private int     mOpcode;
     private int     mLengthSize;
     private int     mLength;
@@ -63,6 +67,8 @@ public class HybiParser {
     private boolean mClosed = false;
 
     private ByteArrayOutputStream mBuffer = new ByteArrayOutputStream();
+    private Inflater mInflater = new Inflater(true);
+    private byte[] mInflateBuffer = new byte[4096];
 
     private static final int BYTE   = 255;
     private static final int FIN    = 128;
@@ -109,6 +115,32 @@ public class HybiParser {
         return payload;
     }
 
+    private byte[] inflate(byte[] payload) throws DataFormatException {
+        ByteArrayOutputStream inflated = new ByteArrayOutputStream();
+
+        mInflater.setInput(payload);
+        while (!mInflater.needsInput()) {
+            int chunkSize = mInflater.inflate(mInflateBuffer);
+            inflated.write(mInflateBuffer, 0, chunkSize);
+        }
+
+        mInflater.setInput(new byte[] { 0, 0, -1, -1 });
+        while (!mInflater.needsInput()) {
+            int chunkSize = mInflater.inflate(mInflateBuffer);
+            inflated.write(mInflateBuffer, 0, chunkSize);
+        }
+
+        return inflated.toByteArray();
+    }
+
+    public void setMasking(boolean masking) {
+        mMasking = masking;
+    }
+
+    public void setDeflate(boolean deflate) {
+        mDeflate = deflate;
+    }
+
     public void start(HappyDataInputStream stream) throws IOException {
         while (true) {
             if (stream.available() == -1) break;
@@ -141,12 +173,13 @@ public class HybiParser {
         boolean rsv2 = (data & RSV2) == RSV2;
         boolean rsv3 = (data & RSV3) == RSV3;
 
-        if (rsv1 || rsv2 || rsv3) {
+        if ((!mDeflate && rsv1) || rsv2 || rsv3) {
             throw new ProtocolError("RSV not zero");
         }
 
         mFinal   = (data & FIN) == FIN;
         mOpcode  = (data & OPCODE);
+        mDeflated = rsv1;
         mMask    = new byte[0];
         mPayload = new byte[0];
 
@@ -256,6 +289,13 @@ public class HybiParser {
     @SuppressLint("NewApi")
 	private void emitFrame() throws IOException {
         byte[] payload = mask(mPayload, mMask, 0);
+        if (mDeflated) {
+            try {
+                payload = inflate(payload);
+            } catch (DataFormatException e) {
+                throw new IOException("Invalid deflated data");
+            }
+        }
         int opcode = mOpcode;
 
         if (opcode == OP_CONTINUATION) {
