@@ -37,9 +37,11 @@ import android.os.Build;
 import android.util.Log;
 
 import java.io.*;
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 import java.util.zip.DataFormatException;
+import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
 @TargetApi(9)
@@ -69,6 +71,8 @@ public class HybiParser {
     private ByteArrayOutputStream mBuffer = new ByteArrayOutputStream();
     private Inflater mInflater = new Inflater(true);
     private byte[] mInflateBuffer = new byte[4096];
+    private Deflater mDeflater = new Deflater(Deflater.DEFAULT_COMPRESSION, true);
+    private byte[] mDeflateBuffer = new byte[4096];
 
     private static final int BYTE   = 255;
     private static final int FIN    = 128;
@@ -104,6 +108,16 @@ public class HybiParser {
 
     public HybiParser(WebSocketClient client) {
         mClient = client;
+
+        //Android's zlib wrapper doesn't expose Z_SYNC_FLUSH
+        //So use a bit of reflection to enable it
+        try {
+            Field f = mDeflater.getClass().getDeclaredField("flushParm");
+            f.setAccessible(true);
+            f.setInt(mDeflater, 2); // Z_SYNC_FLUSH
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private static byte[] mask(byte[] payload, byte[] mask, int offset) {
@@ -113,6 +127,23 @@ public class HybiParser {
             payload[offset + i] = (byte) (payload[offset + i] ^ mask[i % 4]);
         }
         return payload;
+    }
+
+    private byte[] deflate(byte[] payload) {
+        ByteArrayOutputStream deflated = new ByteArrayOutputStream();
+
+        mDeflater.setInput(payload);
+        while(!mDeflater.needsInput()) {
+            int bytes = mDeflater.deflate(mDeflateBuffer);
+            if(mDeflater.needsInput()) {
+                //Strip the 0x00 0x00 0xFF 0xFF from the tail
+                deflated.write(mDeflateBuffer, 0, bytes - 4);
+            } else {
+                deflated.write(mDeflateBuffer, 0, bytes);
+            }
+        }
+
+        return deflated.toByteArray();
     }
 
     private byte[] inflate(byte[] payload) throws DataFormatException {
@@ -231,6 +262,9 @@ public class HybiParser {
         if (mClosed) return null;
 
         byte[] buffer = (data instanceof String) ? decode((String) data) : (byte[]) data;
+        if(mDeflate) {
+            buffer = deflate(buffer);
+        }
         int insert = (errorCode > 0) ? 2 : 0;
         int length = buffer.length + insert;
         int header = (length <= 125) ? 2 : (length <= 65535 ? 4 : 10);
@@ -239,6 +273,8 @@ public class HybiParser {
         byte[] frame = new byte[length + offset];
 
         frame[0] = (byte) ((byte)FIN | (byte)opcode);
+        if(mDeflate)
+            frame[0] |= RSV1;
 
         if (length <= 125) {
             frame[1] = (byte) (masked | length);
