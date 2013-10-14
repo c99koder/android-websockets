@@ -17,6 +17,7 @@ import org.apache.http.message.BasicNameValuePair;
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import java.io.EOFException;
@@ -46,6 +47,27 @@ public class WebSocketClient {
     private HybiParser               mParser;
     private String                   mProxyHost;
     private int                      mProxyPort;
+
+    static final String ENABLED_CIPHERS[] = {
+            "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
+            "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
+            "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
+            "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA",
+            "TLS_DHE_RSA_WITH_AES_128_CBC_SHA",
+            "TLS_DHE_RSA_WITH_AES_256_CBC_SHA",
+            "TLS_DHE_DSS_WITH_AES_128_CBC_SHA",
+            "TLS_ECDHE_RSA_WITH_RC4_128_SHA",
+            "TLS_ECDHE_ECDSA_WITH_RC4_128_SHA",
+            "TLS_RSA_WITH_AES_128_CBC_SHA",
+            "TLS_RSA_WITH_AES_256_CBC_SHA",
+            "SSL_RSA_WITH_3DES_EDE_CBC_SHA",
+            "SSL_RSA_WITH_RC4_128_SHA",
+            "SSL_RSA_WITH_RC4_128_MD5",
+    };
+
+    static final String ENABLED_PROTOCOLS[] = {
+            "TLSv1.2", "TLSv1.1", "TLSv1"
+    };
 
     private final Object mSendLock = new Object();
 
@@ -94,8 +116,15 @@ public class WebSocketClient {
                     SocketFactory factory = mURI.getScheme().equals("wss") ? getSSLSocketFactory() : SocketFactory.getDefault();
                     if(mProxyHost != null && mProxyHost.length() > 0)
                         mSocket = SocketFactory.getDefault().createSocket(mProxyHost, mProxyPort);
-                    else
+                    else {
                         mSocket = factory.createSocket(mURI.getHost(), port);
+
+                        if(mURI.getScheme().equals("wss")) {
+                            SSLSocket s = (SSLSocket)mSocket;
+                            s.setEnabledProtocols(ENABLED_PROTOCOLS);
+                            s.setEnabledCipherSuites(ENABLED_CIPHERS);
+                        }
+                    }
                     if(Build.VERSION.SDK_INT >= 14 && mSocketTag > 0) {
                     	TrafficStats.setThreadStatsTag(mSocketTag);
                     	TrafficStats.tagSocket(mSocket);
@@ -121,6 +150,9 @@ public class WebSocketClient {
                         while (!TextUtils.isEmpty(line = readLine(stream)));
                         if(mURI.getScheme().equals("wss")) {
                             mSocket = getSSLSocketFactory().createSocket(mSocket, mURI.getHost(), port, false);
+                            SSLSocket s = (SSLSocket)mSocket;
+                            s.setEnabledProtocols(ENABLED_PROTOCOLS);
+                            s.setEnabledCipherSuites(ENABLED_CIPHERS);
                             out = new PrintWriter(mSocket.getOutputStream());
                         }
                     }
