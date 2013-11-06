@@ -121,8 +121,16 @@ public class WebSocketClient {
 
                         if(mURI.getScheme().equals("wss")) {
                             SSLSocket s = (SSLSocket)mSocket;
-                            s.setEnabledProtocols(ENABLED_PROTOCOLS);
-                            s.setEnabledCipherSuites(ENABLED_CIPHERS);
+                            try {
+                                s.setEnabledProtocols(ENABLED_PROTOCOLS);
+                            } catch (IllegalArgumentException e) {
+                                //Not supported on older Android versions
+                            }
+                            try {
+                                s.setEnabledCipherSuites(ENABLED_CIPHERS);
+                            } catch (IllegalArgumentException e) {
+                                //Not supported on older Android versions
+                            }
                         }
                     }
                     if(Build.VERSION.SDK_INT >= 14 && mSocketTag > 0) {
