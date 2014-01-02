@@ -2,6 +2,56 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../ARChromeActivity" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../ActionBarSherlock" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../AndroidXO" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../Biblioteca" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../Biblioteca/TouchXML" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../Biblioteca/three20" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../CanvasNowPlaying" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../ECSlidingViewController" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../GardenController" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../JSONKit" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../LibSlideMenu" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../OpenInChrome" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../PageCurlDemo" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../PebbleCanvasCalendarPluginProject" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../SlidingMenu" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../SocketRocket" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../SyncProviderDemo" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../TTPickerTextFieldDemo" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../TTTAttributedLabel" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../TUSafariActivity" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../TouchXML" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../blackberry" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../boffin-iphone" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../boffin-iphone/TouchXML" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../cwac-task" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../festivals-android" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../festivals-iphone" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../festivals-iphone/TouchXML" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../festivals-iphone/three20" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../ilya" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../irccloud-android" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../irccloud-android-1.0.5" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../irccloud-android-backup" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../irccloud-android-balls" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../irccloud-android-native" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../irccloud-glass-hack/phpws" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../irccloud-ios" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../irccloud-ios-balls" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../json-framework" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../lastfm-android" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../lastfm-iphone" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../lastfm-iphone/TouchXML" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../lastfm-iphone/three20" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../minecrift" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../minicraft-android" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../websockets-proxy" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../wp-lifestream" vcs="Git" />
   </component>
 </project>
 
