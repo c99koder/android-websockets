@@ -3,7 +3,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:0.7.+'
+        classpath 'com.android.tools.build:gradle:0.9.+'
     }
 }
 apply plugin: 'android-library'
@@ -13,22 +13,18 @@ dependencies {
 
 android {
     compileSdkVersion 19
-    buildToolsVersion "19.0.1"
+    buildToolsVersion "19.0.3"
 
     defaultConfig {
         minSdkVersion 1
         targetSdkVersion 1
     }
     sourceSets {
-        main {
-            java.srcDirs = ['src/main/java']
-            resources.srcDirs = ['src/main/java']
-            aidl.srcDirs = ['src/main/java']
-            renderscript.srcDirs = ['src/main/java']
-            res.srcDirs = ['res']
-            assets.srcDirs = ['assets']
-        }
-
-        instrumentTest.setRoot('tests')
+        main.java.srcDirs = ['src/main/java']
+        main.resources.srcDirs = ['src/main/java']
+        main.aidl.srcDirs = ['src/main/java']
+        main.renderscript.srcDirs = ['src/main/java']
+        main.res.srcDirs = ['res']
+        main.assets.srcDirs = ['assets']
     }
 }
