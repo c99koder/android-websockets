@@ -41,7 +41,7 @@ public class WebSocketClient {
     private Listener                 mListener;
     private Socket                   mSocket;
     private Thread                   mThread;
-    private HandlerThread            mHandlerThread;
+    private static final HandlerThread mHandlerThread = new HandlerThread("websocket-thread");
     private Handler                  mHandler;
     private List<BasicNameValuePair> mExtraHeaders;
     private HybiParser               mParser;
@@ -83,8 +83,8 @@ public class WebSocketClient {
         mExtraHeaders = extraHeaders;
         mParser       = new HybiParser(this);
 
-        mHandlerThread = new HandlerThread("websocket-thread");
-        mHandlerThread.start();
+        if(!mHandlerThread.isAlive())
+            mHandlerThread.start();
         mHandler = new Handler(mHandlerThread.getLooper());
     }
 
