@@ -234,6 +234,7 @@ public class WebSocketClient {
                 }
             }
         });
+        mThread.setName("websocket-parser-thread");
         mThread.start();
     }
 
