@@ -140,7 +140,7 @@ public class WebSocketClient {
 
                     PrintWriter out = new PrintWriter(mSocket.getOutputStream());
                     if(mProxyHost != null && mProxyHost.length() > 0 && mProxyPort > 0) {
-                        out.print("CONNECT " + mURI.getHost() + ":" + port + " HTTP/1.1\r\n");
+                        out.print("CONNECT " + mURI.getHost() + ":" + port + " HTTP/1.0\r\n");
                         out.print("\r\n");
                         out.flush();
                         HybiParser.HappyDataInputStream stream = new HybiParser.HappyDataInputStream(mSocket.getInputStream());
