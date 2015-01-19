@@ -16,8 +16,8 @@ android {
     buildToolsVersion "20.0"
 
     defaultConfig {
-        minSdkVersion 1
-        targetSdkVersion 1
+        minSdkVersion 4
+        targetSdkVersion 4
     }
     sourceSets {
         main.java.srcDirs = ['src/main/java']
