@@ -11,6 +11,7 @@ import android.util.Base64;
 import android.util.Log;
 import org.apache.http.*;
 import org.apache.http.client.HttpResponseException;
+import org.apache.http.conn.ssl.StrictHostnameVerifier;
 import org.apache.http.message.BasicLineParser;
 import org.apache.http.message.BasicNameValuePair;
 
@@ -139,6 +140,14 @@ public class WebSocketClient {
                     }
 
                     PrintWriter out = new PrintWriter(mSocket.getOutputStream());
+
+                    if(mURI.getScheme().equals("wss")) {
+                        SSLSocket s = (SSLSocket) mSocket;
+                        StrictHostnameVerifier verifier = new StrictHostnameVerifier();
+                        if (!verifier.verify(mURI.getHost(), s.getSession()))
+                            throw new SSLException("Hostname mismatch");
+                    }
+
                     if(mProxyHost != null && mProxyHost.length() > 0 && mProxyPort > 0) {
                         out.print("CONNECT " + mURI.getHost() + ":" + port + " HTTP/1.0\r\n");
                         out.print("\r\n");
