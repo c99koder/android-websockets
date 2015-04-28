@@ -141,13 +141,6 @@ public class WebSocketClient {
 
                     PrintWriter out = new PrintWriter(mSocket.getOutputStream());
 
-                    if(mURI.getScheme().equals("wss")) {
-                        SSLSocket s = (SSLSocket) mSocket;
-                        StrictHostnameVerifier verifier = new StrictHostnameVerifier();
-                        if (!verifier.verify(mURI.getHost(), s.getSession()))
-                            throw new SSLException("Hostname mismatch");
-                    }
-
                     if(mProxyHost != null && mProxyHost.length() > 0 && mProxyPort > 0) {
                         out.print("CONNECT " + mURI.getHost() + ":" + port + " HTTP/1.0\r\n");
                         out.print("\r\n");
@@ -173,6 +166,14 @@ public class WebSocketClient {
                             out = new PrintWriter(mSocket.getOutputStream());
                         }
                     }
+
+                    if(mURI.getScheme().equals("wss")) {
+                        SSLSocket s = (SSLSocket) mSocket;
+                        StrictHostnameVerifier verifier = new StrictHostnameVerifier();
+                        if (!verifier.verify(mURI.getHost(), s.getSession()))
+                            throw new SSLException("Hostname mismatch");
+                    }
+
                     out.print("GET " + path + " HTTP/1.1\r\n");
                     out.print("Upgrade: websocket\r\n");
                     out.print("Connection: Upgrade\r\n");
