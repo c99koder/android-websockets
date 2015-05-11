@@ -156,8 +156,7 @@ public class WebSocketClient {
                         }
 
                         // Read HTTP response headers.
-                        String line;
-                        while (!TextUtils.isEmpty(line = readLine(stream)));
+                        while (!TextUtils.isEmpty(readLine(stream)));
                         if(mURI.getScheme().equals("wss")) {
                             mSocket = getSSLSocketFactory().createSocket(mSocket, mURI.getHost(), port, false);
                             SSLSocket s = (SSLSocket)mSocket;
