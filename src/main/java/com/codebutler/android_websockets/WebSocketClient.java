@@ -93,6 +93,10 @@ public class WebSocketClient {
         return mListener;
     }
 
+    public void setListener(Listener listener) {
+        mListener = listener;
+    }
+
     public void connect() {
         if (mThread != null && mThread.isAlive()) {
             return;
@@ -224,22 +228,26 @@ public class WebSocketClient {
                         throw new HttpException("No Sec-WebSocket-Accept header.");
                     }
 
-                    mListener.onConnect();
+                    if(mListener != null)
+                        mListener.onConnect();
 
                     // Now decode websocket frames.
                     mParser.start(stream);
 
                 } catch (EOFException ex) {
                     Log.d(TAG, "WebSocket EOF!", ex);
-                    mListener.onDisconnect(0, "EOF");
+                    if(mListener != null)
+                        mListener.onDisconnect(0, "EOF");
 
                 } catch (SSLException ex) {
                     // Connection reset by peer
                     Log.d(TAG, "Websocket SSL error!", ex);
-                    mListener.onDisconnect(0, "SSL");
+                    if(mListener != null)
+                        mListener.onDisconnect(0, "SSL");
 
                 } catch (Exception ex) {
-                    mListener.onError(ex);
+                    if(mListener != null)
+                        mListener.onError(ex);
                 }
             }
         });
@@ -257,7 +265,8 @@ public class WebSocketClient {
                         mSocket = null;
                     } catch (IOException ex) {
                         Log.d(TAG, "Error while disconnecting", ex);
-                        mListener.onError(ex);
+                        if(mListener != null)
+                            mListener.onError(ex);
                     }
                 }
             });
@@ -328,7 +337,8 @@ public class WebSocketClient {
                 try {
                     synchronized (mSendLock) {
                         if (mSocket == null) {
-                            mListener.onError(new IllegalStateException("Socket not connected"));
+                            if(mListener != null)
+                                mListener.onError(new IllegalStateException("Socket not connected"));
                             return;
                         }
                         OutputStream outputStream = mSocket.getOutputStream();
@@ -338,7 +348,8 @@ public class WebSocketClient {
                             TrafficStats.incrementOperationCount(1);
                 	}
                 } catch (IOException e) {
-                    mListener.onError(e);
+                    if(mListener != null)
+                        mListener.onError(e);
                 }
             }
         });
@@ -354,7 +365,8 @@ public class WebSocketClient {
                     	TrafficStats.setThreadStatsTag(mSocketTag);
         				TrafficStats.tagSocket(mSocket);
 					} catch (SocketException e) {
-						mListener.onError(e);
+                        if(mListener != null)
+    						mListener.onError(e);
 					}
                 }
         	});

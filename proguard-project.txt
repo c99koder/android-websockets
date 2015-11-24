@@ -19,7 +19,3 @@
 #   public *;
 #}
 
--dontwarn org.apache.**
--dontwarn org.ietf.**
--dontwarn javax.naming.**
--dontwarn javax.servlet.**
