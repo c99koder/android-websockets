@@ -109,14 +109,16 @@ public class HybiParser {
     public HybiParser(WebSocketClient client) {
         mClient = client;
 
-        //Android's zlib wrapper doesn't expose Z_SYNC_FLUSH
-        //So use a bit of reflection to enable it
-        try {
-            Field f = mDeflater.getClass().getDeclaredField("flushParm");
-            f.setAccessible(true);
-            f.setInt(mDeflater, 2); // Z_SYNC_FLUSH
-        } catch (Exception e) {
-            e.printStackTrace();
+        if(Build.VERSION.SDK_INT < 19) {
+            //Android's zlib wrapper doesn't expose Z_SYNC_FLUSH
+            //So use a bit of reflection to enable it
+            try {
+                Field f = mDeflater.getClass().getDeclaredField("flushParm");
+                f.setAccessible(true);
+                f.setInt(mDeflater, 2); // Z_SYNC_FLUSH
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -134,7 +136,12 @@ public class HybiParser {
 
         mDeflater.setInput(payload);
         while(!mDeflater.needsInput()) {
-            int bytes = mDeflater.deflate(mDeflateBuffer);
+            int bytes;
+            if(Build.VERSION.SDK_INT < 19)
+                bytes = mDeflater.deflate(mDeflateBuffer);
+            else
+                bytes = mDeflater.deflate(mDeflateBuffer, 0, mDeflateBuffer.length, Deflater.SYNC_FLUSH);
+
             if(mDeflater.needsInput()) {
                 //Strip the 0x00 0x00 0xFF 0xFF from the tail
                 deflated.write(mDeflateBuffer, 0, bytes - 4);
