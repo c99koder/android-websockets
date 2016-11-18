@@ -25,6 +25,8 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.URI;
@@ -118,10 +120,30 @@ public class WebSocketClient {
                     URI origin = new URI(originScheme, "//" + mURI.getHost(), null);
 
                     SocketFactory factory = mURI.getScheme().equals("wss") ? getSSLSocketFactory() : SocketFactory.getDefault();
-                    if(mProxyHost != null && mProxyHost.length() > 0)
-                        mSocket = SocketFactory.getDefault().createSocket(mProxyHost, mProxyPort);
-                    else {
-                        mSocket = factory.createSocket(mURI.getHost(), port);
+                    if(mProxyHost != null && mProxyHost.length() > 0) {
+                        InetAddress[] addresses = InetAddress.getAllByName(mProxyHost);
+                        for (int i = 0; i < addresses.length; i++) {
+                            try {
+                                mSocket = SocketFactory.getDefault().createSocket();
+                                mSocket.connect(new InetSocketAddress(addresses[i], mProxyPort));
+                            } catch (IOException e) {
+                                if (i == addresses.length - 1) {
+                                    throw e;
+                                }
+                            }
+                        }
+                    } else {
+                        InetAddress[] addresses = InetAddress.getAllByName(mURI.getHost());
+                        for (int i = 0; i < addresses.length; i++) {
+                            try {
+                                mSocket = factory.createSocket();
+                                mSocket.connect(new InetSocketAddress(addresses[i], port));
+                            } catch (IOException e) {
+                                if (i == addresses.length - 1) {
+                                    throw e;
+                                }
+                            }
+                        }
 
                         if(mURI.getScheme().equals("wss")) {
                             SSLSocket s = (SSLSocket)mSocket;
