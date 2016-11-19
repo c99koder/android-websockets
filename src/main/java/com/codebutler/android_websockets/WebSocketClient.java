@@ -42,6 +42,7 @@ public class WebSocketClient {
 
     private URI                      mURI;
     private Listener                 mListener;
+    private DebugListener            mDebugListener;
     private Socket                   mSocket;
     private Thread                   mThread;
     private static final HandlerThread mHandlerThread = new HandlerThread("websocket-thread");
@@ -98,6 +99,14 @@ public class WebSocketClient {
         mListener = listener;
     }
 
+    public DebugListener getDebugListener() {
+        return mDebugListener;
+    }
+
+    public void setDebugListener(DebugListener listener) {
+        mDebugListener = listener;
+    }
+
     public void connect() {
         if (mThread != null && mThread.isAlive()) {
             return;
@@ -124,8 +133,10 @@ public class WebSocketClient {
                         InetAddress[] addresses = InetAddress.getAllByName(mProxyHost);
                         for (int i = 0; i < addresses.length; i++) {
                             try {
+                                if(mDebugListener != null)
+                                    mDebugListener.onDebugMsg("Connecting to proxy address: " + addresses[i] + " port: " + mProxyPort);
                                 mSocket = SocketFactory.getDefault().createSocket();
-                                mSocket.connect(new InetSocketAddress(addresses[i], mProxyPort));
+                                mSocket.connect(new InetSocketAddress(addresses[i], mProxyPort), 5000);
                             } catch (IOException e) {
                                 if (i == addresses.length - 1) {
                                     throw e;
@@ -136,8 +147,10 @@ public class WebSocketClient {
                         InetAddress[] addresses = InetAddress.getAllByName(mURI.getHost());
                         for (int i = 0; i < addresses.length; i++) {
                             try {
+                                if(mDebugListener != null)
+                                    mDebugListener.onDebugMsg("Connecting to address: " + addresses[i] + " port: " + port);
                                 mSocket = factory.createSocket();
-                                mSocket.connect(new InetSocketAddress(addresses[i], port));
+                                mSocket.connect(new InetSocketAddress(addresses[i], port), 5000);
                             } catch (IOException e) {
                                 if (i == addresses.length - 1) {
                                     throw e;
@@ -413,6 +426,10 @@ public class WebSocketClient {
         public void onMessage(byte[] data);
         public void onDisconnect(int code, String reason);
         public void onError(Exception error);
+    }
+
+    public interface DebugListener {
+        public void onDebugMsg(String msg);
     }
 
     private SSLSocketFactory getSSLSocketFactory() throws NoSuchAlgorithmException, KeyManagementException {
