@@ -144,6 +144,8 @@ public class WebSocketClient {
                         }
                     }
                     start_socket_thread();
+                } else {
+                    socket.close();
                 }
             } catch (SSLException ex) {
                 ex.printStackTrace();
