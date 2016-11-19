@@ -108,13 +108,13 @@ public class WebSocketClient {
         mDebugListener = listener;
     }
 
-    ArrayList<Thread> mSocketThreads = new ArrayList<>();
+    private ArrayList<Thread> mSocketThreads = new ArrayList<>();
 
     private class ConnectRunnable implements Runnable {
         private SocketFactory mSocketFactory;
         private InetSocketAddress mAddress;
 
-        public ConnectRunnable(SocketFactory factory, InetSocketAddress address) {
+        ConnectRunnable(SocketFactory factory, InetSocketAddress address) {
             mSocketFactory = factory;
             mAddress = address;
         }
@@ -127,9 +127,9 @@ public class WebSocketClient {
                 Socket socket = mSocketFactory.createSocket();
                 socket.connect(mAddress, 30000);
                 if(mSocket == null) {
+                    mSocket = socket;
                     if (mDebugListener != null)
                         mDebugListener.onDebugMsg("Connected to " + mAddress.getAddress());
-                    mSocket = socket;
                     if (mURI.getScheme().equals("wss")) {
                         SSLSocket s = (SSLSocket) mSocket;
                         try {
