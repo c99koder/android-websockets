@@ -33,6 +33,7 @@ import java.net.URI;
 import java.security.KeyManagementException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.List;
 
 @TargetApi(8)
@@ -107,11 +108,99 @@ public class WebSocketClient {
         mDebugListener = listener;
     }
 
+    ArrayList<Thread> mSocketThreads = new ArrayList<>();
+
+    private class ConnectRunnable implements Runnable {
+        private SocketFactory mSocketFactory;
+        private InetSocketAddress mAddress;
+
+        public ConnectRunnable(SocketFactory factory, InetSocketAddress address) {
+            mSocketFactory = factory;
+            mAddress = address;
+        }
+
+        @Override
+        public void run() {
+            try {
+                if (mDebugListener != null)
+                    mDebugListener.onDebugMsg("Connecting to address: " + mAddress.getAddress() + " port: " + mAddress.getPort());
+                Socket socket = mSocketFactory.createSocket();
+                socket.connect(mAddress, 30000);
+                if(mSocket == null) {
+                    if (mDebugListener != null)
+                        mDebugListener.onDebugMsg("Connected to " + mAddress.getAddress());
+                    mSocket = socket;
+                    if (mURI.getScheme().equals("wss")) {
+                        SSLSocket s = (SSLSocket) mSocket;
+                        try {
+                            s.setEnabledProtocols(ENABLED_PROTOCOLS);
+                        } catch (IllegalArgumentException e) {
+                            //Not supported on older Android versions
+                        }
+                        try {
+                            s.setEnabledCipherSuites(ENABLED_CIPHERS);
+                        } catch (IllegalArgumentException e) {
+                            //Not supported on older Android versions
+                        }
+                    }
+                    start_socket_thread();
+                }
+            } catch (SSLException ex) {
+                ex.printStackTrace();
+                if(mSocketThreads.size() == 1) {
+                    Log.d(TAG, "Websocket SSL error!", ex);
+                    if (mListener != null)
+                        mListener.onDisconnect(0, "SSL");
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                if(mSocketThreads.size() == 1) {
+                    if (mListener != null)
+                        mListener.onError(ex);
+                }
+            }
+            mSocketThreads.remove(Thread.currentThread());
+        }
+    }
+
     public void connect() {
         if (mThread != null && mThread.isAlive()) {
             return;
         }
 
+        mThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    int port = (mURI.getPort() != -1) ? mURI.getPort() : (mURI.getScheme().equals("wss") ? 443 : 80);
+                    SocketFactory factory = mURI.getScheme().equals("wss") ? getSSLSocketFactory() : SocketFactory.getDefault();
+                    if (mProxyHost != null && mProxyHost.length() > 0) {
+                        if (mDebugListener != null)
+                            mDebugListener.onDebugMsg("Connecting to proxy: " + mProxyHost + " port: " + mProxyPort);
+                        mSocket = SocketFactory.getDefault().createSocket(mProxyHost, mProxyPort);
+                    } else {
+                        InetAddress[] addresses = InetAddress.getAllByName(mURI.getHost());
+                        for (InetAddress address : addresses) {
+                            if(mSocket == null) {
+                                Thread t = new Thread(new ConnectRunnable(factory, new InetSocketAddress(address, port)));
+                                mSocketThreads.add(t);
+                                t.start();
+                                Thread.sleep(300);
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                } catch (Exception ex) {
+                    if (mListener != null)
+                        mListener.onError(ex);
+                }
+            }
+        });
+        mThread.start();
+    }
+
+    private void start_socket_thread() {
         mThread = new Thread(new Runnable() {
             @SuppressLint("NewApi")
 			public void run() {
@@ -128,50 +217,6 @@ public class WebSocketClient {
                     String originScheme = mURI.getScheme().equals("wss") ? "https" : "http";
                     URI origin = new URI(originScheme, "//" + mURI.getHost(), null);
 
-                    SocketFactory factory = mURI.getScheme().equals("wss") ? getSSLSocketFactory() : SocketFactory.getDefault();
-                    if(mProxyHost != null && mProxyHost.length() > 0) {
-                        InetAddress[] addresses = InetAddress.getAllByName(mProxyHost);
-                        for (int i = 0; i < addresses.length; i++) {
-                            try {
-                                if(mDebugListener != null)
-                                    mDebugListener.onDebugMsg("Connecting to proxy address: " + addresses[i] + " port: " + mProxyPort);
-                                mSocket = SocketFactory.getDefault().createSocket();
-                                mSocket.connect(new InetSocketAddress(addresses[i], mProxyPort), 5000);
-                            } catch (IOException e) {
-                                if (i == addresses.length - 1) {
-                                    throw e;
-                                }
-                            }
-                        }
-                    } else {
-                        InetAddress[] addresses = InetAddress.getAllByName(mURI.getHost());
-                        for (int i = 0; i < addresses.length; i++) {
-                            try {
-                                if(mDebugListener != null)
-                                    mDebugListener.onDebugMsg("Connecting to address: " + addresses[i] + " port: " + port);
-                                mSocket = factory.createSocket();
-                                mSocket.connect(new InetSocketAddress(addresses[i], port), 5000);
-                            } catch (IOException e) {
-                                if (i == addresses.length - 1) {
-                                    throw e;
-                                }
-                            }
-                        }
-
-                        if(mURI.getScheme().equals("wss")) {
-                            SSLSocket s = (SSLSocket)mSocket;
-                            try {
-                                s.setEnabledProtocols(ENABLED_PROTOCOLS);
-                            } catch (IllegalArgumentException e) {
-                                //Not supported on older Android versions
-                            }
-                            try {
-                                s.setEnabledCipherSuites(ENABLED_CIPHERS);
-                            } catch (IllegalArgumentException e) {
-                                //Not supported on older Android versions
-                            }
-                        }
-                    }
                     if(Build.VERSION.SDK_INT >= 14 && mSocketTag > 0) {
                     	TrafficStats.setThreadStatsTag(mSocketTag);
                     	TrafficStats.tagSocket(mSocket);
