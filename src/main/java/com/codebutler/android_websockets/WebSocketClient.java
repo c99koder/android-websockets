@@ -180,6 +180,7 @@ public class WebSocketClient {
                         if (mDebugListener != null)
                             mDebugListener.onDebugMsg("Connecting to proxy: " + mProxyHost + " port: " + mProxyPort);
                         mSocket = SocketFactory.getDefault().createSocket(mProxyHost, mProxyPort);
+                        start_socket_thread();
                     } else {
                         InetAddress[] addresses = InetAddress.getAllByName(mURI.getHost());
                         for (InetAddress address : addresses) {
