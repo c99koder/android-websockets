@@ -149,14 +149,14 @@ public class WebSocketClient {
                 }
             } catch (SSLException ex) {
                 ex.printStackTrace();
-                if(mSocketThreads.size() == 1) {
+                if(mSocket == null && mSocketThreads.size() == 1) {
                     Log.d(TAG, "Websocket SSL error!", ex);
                     if (mListener != null)
                         mListener.onDisconnect(0, "SSL");
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();
-                if(mSocketThreads.size() == 1) {
+                if(mSocket == null && mSocketThreads.size() == 1) {
                     if (mListener != null)
                         mListener.onError(ex);
                 }
