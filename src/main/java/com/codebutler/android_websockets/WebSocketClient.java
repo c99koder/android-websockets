@@ -434,7 +434,7 @@ public class WebSocketClient {
                         OutputStream outputStream = mSocket.getOutputStream();
                         outputStream.write(frame);
                         outputStream.flush();
-                        if(Build.VERSION.SDK_INT >= 14)
+                        if(Build.VERSION.SDK_INT >= 14 && mSocketTag > 0)
                             TrafficStats.incrementOperationCount(1);
                 	}
                 } catch (IOException e) {
