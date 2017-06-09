@@ -25,4 +25,9 @@ android {
         main.res.srcDirs = ['res']
         main.assets.srcDirs = ['assets']
     }
+    buildTypes {
+        debugTest.initWith(debug)
+        enterprisedebug.initWith(debug)
+        enterpriserelease.initWith(release)
+    }
 }
