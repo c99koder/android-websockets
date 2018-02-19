@@ -85,7 +85,6 @@ public class WebSocketClient {
         mURI          = uri;
         mListener = listener;
         mExtraHeaders = extraHeaders;
-        mParser       = new HybiParser(this);
 
         if(!mHandlerThread.isAlive())
             mHandlerThread.start();
@@ -283,6 +282,7 @@ public class WebSocketClient {
                     out.print("\r\n");
                     out.flush();
 
+                    mParser = new HybiParser(WebSocketClient.this);
                     HybiParser.HappyDataInputStream stream = new HybiParser.HappyDataInputStream(mSocket.getInputStream());
 
                     // Read HTTP response status line.
