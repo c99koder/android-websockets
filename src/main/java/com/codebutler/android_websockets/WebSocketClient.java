@@ -9,11 +9,7 @@ import android.os.HandlerThread;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
-import org.apache.http.*;
-import org.apache.http.client.HttpResponseException;
 import org.apache.http.conn.ssl.StrictHostnameVerifier;
-import org.apache.http.message.BasicLineParser;
-import org.apache.http.message.BasicNameValuePair;
 
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLContext;
@@ -25,6 +21,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -35,6 +32,10 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
+import okhttp3.Headers;
+import okhttp3.internal.http.StatusLine;
 
 @TargetApi(8)
 public class WebSocketClient {
@@ -48,7 +49,7 @@ public class WebSocketClient {
     private Thread                   mThread;
     private static final HandlerThread mHandlerThread = new HandlerThread("websocket-thread");
     private Handler                  mHandler;
-    private List<BasicNameValuePair> mExtraHeaders;
+    private Map<String, String> mExtraHeaders;
     private HybiParser               mParser;
     private String                   mProxyHost;
     private int                      mProxyPort;
@@ -81,7 +82,7 @@ public class WebSocketClient {
         sTrustManagers = tm;
     }
 
-    public WebSocketClient(URI uri, Listener listener, List<BasicNameValuePair> extraHeaders) {
+    public WebSocketClient(URI uri, Listener listener, Map<String, String> extraHeaders) {
         mURI          = uri;
         mListener = listener;
         mExtraHeaders = extraHeaders;
@@ -233,11 +234,14 @@ public class WebSocketClient {
                         HybiParser.HappyDataInputStream stream = new HybiParser.HappyDataInputStream(mSocket.getInputStream());
 
                         // Read HTTP response status line.
-                        StatusLine statusLine = parseStatusLine(readLine(stream));
-                        if (statusLine == null) {
-                            throw new HttpException("Received no reply from server.");
-                        } else if (statusLine.getStatusCode() != HttpStatus.SC_OK) {
-                            throw new HttpResponseException(statusLine.getStatusCode(), statusLine.getReasonPhrase());
+                        String statusLineString = readLine(stream);
+                        if (statusLineString == null) {
+                            throw new Exception("Received no reply from server.");
+                        } else {
+                            StatusLine statusLine = StatusLine.parse(statusLineString);
+                            if (statusLine.code != HttpURLConnection.HTTP_OK) {
+                                throw new Exception(statusLine.toString());
+                            }
                         }
 
                         // Read HTTP response headers.
@@ -275,8 +279,8 @@ public class WebSocketClient {
                     out.print("Sec-WebSocket-Version: 13\r\n");
                     out.print("Sec-WebSocket-Extensions: x-webkit-deflate-frame\r\n");
                     if (mExtraHeaders != null) {
-                        for (NameValuePair pair : mExtraHeaders) {
-                            out.print(String.format("%s: %s\r\n", pair.getName(), pair.getValue()));
+                        for (String key : mExtraHeaders.keySet()) {
+                            out.print(String.format("%s: %s\r\n", key, mExtraHeaders.get(key)));
                         }
                     }
                     out.print("\r\n");
@@ -286,11 +290,14 @@ public class WebSocketClient {
                     HybiParser.HappyDataInputStream stream = new HybiParser.HappyDataInputStream(mSocket.getInputStream());
 
                     // Read HTTP response status line.
-                    StatusLine statusLine = parseStatusLine(readLine(stream));
-                    if (statusLine == null) {
-                        throw new HttpException("Received no reply from server.");
-                    } else if (statusLine.getStatusCode() != HttpStatus.SC_SWITCHING_PROTOCOLS) {
-                        throw new HttpResponseException(statusLine.getStatusCode(), statusLine.getReasonPhrase());
+                    String statusLineString = readLine(stream);
+                    if (statusLineString == null) {
+                        throw new Exception("Received no reply from server.");
+                    } else {
+                        StatusLine statusLine = StatusLine.parse(statusLineString);
+                        if (statusLine.code != 101) {
+                            throw new Exception(statusLine.toString());
+                        }
                     }
 
                     // Read HTTP response headers.
@@ -298,24 +305,25 @@ public class WebSocketClient {
                     boolean validated = false;
 
                     while (!TextUtils.isEmpty(line = readLine(stream))) {
-                        Header header = parseHeader(line);
-                        if (header.getName().equalsIgnoreCase("Sec-WebSocket-Accept")) {
+                        int index = line.indexOf(":");
+                        Headers header = new Headers.Builder().add(line.substring(0, index).trim(), line.substring(index + 1)).build();
+                        if (header.name(0).equalsIgnoreCase("Sec-WebSocket-Accept")) {
                             String expected = createSecretValidation(secret);
-                            String actual = header.getValue().trim();
+                            String actual = header.value(0).trim();
 
                             if (!expected.equals(actual)) {
-                                throw new HttpException("Bad Sec-WebSocket-Accept header value.");
+                                throw new Exception("Bad Sec-WebSocket-Accept header value.");
                             }
 
                             validated = true;
-                        } else if(header.getName().equalsIgnoreCase("Sec-WebSocket-Extensions")) {
-                            if(header.getValue().trim().equalsIgnoreCase("x-webkit-deflate-frame"))
+                        } else if(header.name(0).equalsIgnoreCase("Sec-WebSocket-Extensions")) {
+                            if(header.value(0).trim().equalsIgnoreCase("x-webkit-deflate-frame"))
                                 mParser.setDeflate(true);
                         }
                     }
 
                     if (!validated) {
-                        throw new HttpException("No Sec-WebSocket-Accept header.");
+                        throw new Exception("No Sec-WebSocket-Accept header.");
                     }
 
                     if(mListener != null)
@@ -369,17 +377,6 @@ public class WebSocketClient {
 
     public void send(byte[] data) {
         sendFrame(mParser.frame(data));
-    }
-
-    private StatusLine parseStatusLine(String line) {
-        if (TextUtils.isEmpty(line)) {
-            return null;
-        }
-        return BasicLineParser.parseStatusLine(line, new BasicLineParser());
-    }
-
-    private Header parseHeader(String line) {
-        return BasicLineParser.parseHeader(line, new BasicLineParser());
     }
 
     // Can't use BufferedReader because it buffers past the HTTP data.

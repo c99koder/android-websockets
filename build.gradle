@@ -9,14 +9,18 @@ buildscript {
 }
 apply plugin: 'com.android.library'
 
+repositories {
+    google()
+    jcenter()
+}
+
 android {
     compileSdkVersion 26
-    buildToolsVersion '27.0.3'
-    useLibrary 'org.apache.http.legacy'
+    buildToolsVersion '28.0.1'
 
     defaultConfig {
         minSdkVersion 4
-        targetSdkVersion 4
+        targetSdkVersion 26
     }
     sourceSets {
         main.java.srcDirs = ['src/main/java']
@@ -30,5 +34,8 @@ android {
         debugTest.initWith(debug)
         enterprisedebug.initWith(debug)
         enterpriserelease.initWith(release)
+    }
+    dependencies {
+        implementation 'com.squareup.okhttp3:okhttp:3.10.0'
     }
 }
