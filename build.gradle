@@ -4,7 +4,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.1.0'
+        classpath 'com.android.tools.build:gradle:3.3.2'
     }
 }
 apply plugin: 'com.android.library'
@@ -15,12 +15,12 @@ repositories {
 }
 
 android {
-    compileSdkVersion 26
-    buildToolsVersion '28.0.1'
+    compileSdkVersion 28
+    buildToolsVersion '28.0.3'
 
     defaultConfig {
-        minSdkVersion 4
-        targetSdkVersion 26
+        minSdkVersion 14
+        targetSdkVersion 28
     }
     sourceSets {
         main.java.srcDirs = ['src/main/java']
@@ -34,6 +34,7 @@ android {
         debugTest.initWith(debug)
         enterprisedebug.initWith(debug)
         enterpriserelease.initWith(release)
+        mockdata.initWith(debug)
     }
     dependencies {
         implementation 'com.squareup.okhttp3:okhttp:3.10.0'
