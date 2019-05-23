@@ -31,6 +31,7 @@ import java.security.KeyManagementException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -54,7 +55,7 @@ public class WebSocketClient {
     private String                   mProxyHost;
     private int                      mProxyPort;
 
-    static final String ENABLED_CIPHERS[] = {
+    static final String[] ENABLED_CIPHERS = {
             "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
             "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
             "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
@@ -70,8 +71,8 @@ public class WebSocketClient {
             "SSL_RSA_WITH_RC4_128_MD5",
     };
 
-    static final String ENABLED_PROTOCOLS[] = {
-            "TLSv1.2", "TLSv1.1", "TLSv1"
+    static final String[] ENABLED_PROTOCOLS = {
+            "TLSv1.3", "TLSv1.2", "TLSv1.1", "TLSv1"
     };
 
     private final Object mSendLock = new Object();
@@ -133,12 +134,18 @@ public class WebSocketClient {
                     if (mURI.getScheme().equals("wss")) {
                         SSLSocket s = (SSLSocket) mSocket;
                         try {
-                            s.setEnabledProtocols(ENABLED_PROTOCOLS);
+                            ArrayList<String> protocols = new ArrayList<>(Arrays.asList(ENABLED_PROTOCOLS));
+                            protocols.retainAll(Arrays.asList(s.getSupportedProtocols()));
+                            Log.d(TAG, "Enabling protocols: " + protocols);
+                            s.setEnabledProtocols(protocols.toArray(new String[protocols.size()]));
                         } catch (IllegalArgumentException e) {
                             //Not supported on older Android versions
                         }
                         try {
-                            s.setEnabledCipherSuites(ENABLED_CIPHERS);
+                            ArrayList<String> ciphers = new ArrayList<>(Arrays.asList(ENABLED_CIPHERS));
+                            ciphers.retainAll(Arrays.asList(s.getSupportedCipherSuites()));
+                            Log.d(TAG, "Enabling ciphers: " + ciphers);
+                            s.setEnabledCipherSuites(ciphers.toArray(new String[ciphers.size()]));
                         } catch (IllegalArgumentException e) {
                             //Not supported on older Android versions
                         }
@@ -253,11 +260,13 @@ public class WebSocketClient {
                                 s.setEnabledProtocols(ENABLED_PROTOCOLS);
                             } catch (IllegalArgumentException e) {
                                 //Not supported on older Android versions
+                                e.printStackTrace();
                             }
                             try {
                                 s.setEnabledCipherSuites(ENABLED_CIPHERS);
                             } catch (IllegalArgumentException e) {
                                 //Not supported on older Android versions
+                                e.printStackTrace();
                             }
                             out = new PrintWriter(mSocket.getOutputStream());
                         }
