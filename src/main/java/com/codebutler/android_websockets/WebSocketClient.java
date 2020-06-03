@@ -343,18 +343,26 @@ public class WebSocketClient {
 
                 } catch (EOFException ex) {
                     Log.d(TAG, "WebSocket EOF!", ex);
-                    if(mListener != null)
-                        mListener.onDisconnect(0, "EOF");
-
+                    try {
+                        if(mListener != null)
+                            mListener.onDisconnect(0, "EOF");
+                    } catch (Exception e) {
+                    }
                 } catch (SSLException ex) {
                     // Connection reset by peer
                     Log.d(TAG, "Websocket SSL error!", ex);
-                    if(mListener != null)
-                        mListener.onDisconnect(0, "SSL");
-
+                    try {
+                        if(mListener != null)
+                            mListener.onDisconnect(0, "SSL");
+                    } catch (Exception e) {
+                    }
                 } catch (Exception ex) {
-                    if(mListener != null)
-                        mListener.onError(ex);
+                    try {
+                        ex.printStackTrace();
+                        if (mListener != null)
+                            mListener.onError(ex);
+                    } catch (Exception e) {
+                    }
                 }
             }
         });
