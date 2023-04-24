@@ -15,11 +15,12 @@ repositories {
 }
 
 android {
-    compileSdkVersion 29
+    namespace "com.codebutler.android_websockets"
+    compileSdkVersion 31
 
     defaultConfig {
         minSdkVersion 14
-        targetSdkVersion 29
+        targetSdkVersion 31
     }
     sourceSets {
         main.java.srcDirs = ['src/main/java']
